@@ -1,0 +1,239 @@
+##########################################################################################################
+---------------------------------docker run otomatik image çekmek-----------------------------------------
+
+docker run centos 
+
+Docker Hub, kullanıcıların Docker imajlarını bulabileceği,
+ paylaşabileceği ve indirebileceği bir merkezi imaj deposudur. 
+"docker run centos" komutu, yerelde "centos" imajı bulunmadığında, 
+Docker Hub'dan "centos" imajını çeker ve yerel bir konteyner oluşturur.
+
+##########################################################################################################
+------------------------------------docker info------------------------------------------------------------
+
+docker info  => docker sunucu hakkında genel bilgileri veriyor
+	image sayısı
+	container sayısı
+	cpu 
+	bellek
+	dosya komumları
+	registery adresi
+	...
+	diğer detaylı bilgiler
+	
+
+##########################################################################################################
+-----------------------------temel container listemeleme komutları---------------------------------------
+docker container ls  | 
+ 			=> bu iki komut aynı işlemi görüyor
+docker ps            |   
+
+
+docker container ls -a | 
+ 			=> bu iki komut aynı işlemi görüyor
+docker ps -a           |   
+##########################################################################################################
+-------------------------------docker interactive bağlantı-----------------------------------------------
+	
+
+
+
+docker container run -it centos:7 bash => bash veya shell(sh) başlantı yöntemini seçiyoruz
+
+Docker interaktif bağlantı, Docker container'ının içindeki işletim sistemi 
+ve uygulamalarla etkileşim kurmanıza izin veren bir özelliktir. Bu özellik, 
+Docker CLI (Command Line Interface) aracılığıyla container'larla çalışırken kullanılabilir.
+Docker interaktif bağlantı, "docker run" 
+komutuna "--interactive" veya kısa hali olan "-i" parametresi ve "--tty" veya kısa hali olan "-t" 
+parametresi eklenerek etkinleştirilir. Örneğin, aşağıdaki komut, "ubuntu" 
+isimli bir Docker image'ı kullanarak bir interaktif container oluşturur:
+
+
+docker run -it ubuntu
+Bu komut, yeni bir Ubuntu container'ı oluşturur 
+ve kullanıcının container'ın içinde etkileşim kurmasını sağlar.
+ "-i" parametresi, interaktif bağlantıyı etkinleştirirken, "-t" parametresi 
+ise terminali bağlamak için gereklidir.
+
+Docker interaktif bağlantı, kullanıcının container içinde çalışan 
+komutları çalıştırmasına ve container'ın içindeki dosyaları düzenlemesine 
+olanak tanır. Bu özellik, özellikle uygulama geliştirme ve test ortamlarında
+ oldukça faydalıdır.
+##########################################################################################################
+---------------------------------start edilen bir container'a bağlanmak için-----------------------------
+
+
+docker start <container-id> => arka planda'da attach olmadan çalıştırıyoruz
+
+start edilen bir container'a bağlanmak için
+
+docker container exec <container-id> ps -ef  => ps- ef ile çıktı aldık
+docker container exec -it <container-id> bash   => bash ile container'a bağlandık (centos örneğinden devam)
+
+##########################################################################################################
+---------docker attach <continer-id> ve docker exec -it <container-id> bash arasındaki fark--------------------
+
+	
+
+
+"Docker attach <container-name>" komutu, çalışan bir container'a bağlanır ve container'ın
+ mevcut işlemine bağlanarak STDIN, STDOUT ve STDERR çıktılarını gösterir.
+ Bu komut, container'ın içindeki uygulamanın çıktısını takip etmek için kullanılır.
+Öte yandan, "docker container exec -it <container-name> bash" komutu, yeni bir işlem 
+oluşturarak container'a bağlanır ve bir bash kabuğunu başlatır. Bu komut, 
+"-it" parametreleri ile interaktif bir bağlantı oluşturur ve TTY bağlantısını etkinleştirir.
+ Ayrıca, "bash" kelimesi ile bash kabuğunu başlatır.
+
+Bu iki komut arasındaki temel fark, "docker attach" komutunun container'ın
+ mevcut işlemine doğrudan bağlanması ve container'ın mevcut durumunu göstermesi,
+ "docker container exec -it" komutunun 
+ise yeni bir işlem başlatması ve container'a bağlanmasıdır. Ayrıca, "docker container 
+exec -it" komutu ile bir bash kabuğu başlatılabileceği için, 
+container'da farklı komutlar veya işlemler çalıştırmak mümkündür.
+"docker container exec -it <container-name> bash" komutu ile container içinde 
+bir bash kabuğu başlatarak, container'a bağlanabilir ve 
+container içinde farklı işlemler veya komutlar çalıştırabilirsiniz.
+Bu şekilde container'ın mevcut işlemine doğrudan bağlanmak yerine, 
+yeni bir işlem başlatarak daha esnek bir şekilde  çalışabilirsiniz.
+"Docker attach <container-name>" komutu ise, mevcut işlemi takip etmek ve container'ın 
+mevcut durumunu görüntülemek için kullanılır. 
+Bu komut ile container'ın içinde doğrudan komut çalıştırmak veya yeni bir
+ işlem başlatmak mümkün değildir.
+Yani, "docker container exec -it" komutu ile container içinde daha fazla esneklik ve 
+kontrol sağlayabilirsiniz, ancak "docker attach" komutu ile sadece container'ın mevcut 
+durumunu görüntüleyebilirsiniz.
+
+
+Örneğin, bir Nginx web sunucusu çalıştıran bir container düşünelim. 
+Bu container'ı "docker run" komutu ile başlattığımızı varsayalım. docker attach my-nginx-container
+Bu komut ile container'a doğrudan bağlanarak 
+Nginx web sunucusunun çıktısını takip edebiliriz. Ancak, yeni bir işlem başlatmak
+ veya Nginx konfigürasyonunu düzenlemek gibi farklı işlemleri gerçekleştiremiyoruz.
+docker container exec -it my-nginx-container bash
+Bu komut ile container'a yeni bir bash işlemi başlatarak,
+ container içinde farklı işlemler gerçekleştirebiliriz. Örneğin, 
+Nginx konfigürasyon dosyasını düzenleyebiliriz:
+nano /etc/nginx/nginx.conf
+Bu şekilde, "docker container exec -it" komutu ile container
+ içinde daha fazla esneklik ve kontrol sağlayabiliriz.
+
+
+##########################################################################################################
+---------------------------------detaylı docker container arama -----------------------------------------
+
+docker container ls -a --no-trunc => detaylı olarak container id'li görmeyi sağlar
+docker container ls -a -q => sadece container id'leri listeler kısatılmış şekilde
+docker container ls -a --filter "status=exited"
+docker container ls -a | grep centos => centos kelimesini içeren containerleri listeyeler  bu centos herhhangi bir alanda olabilir
+
+##########################################################################################################
+---------------------------------docker container deattach mode---------------------------------------
+docker container run censtos:7 ping 127.0.0.1 -c 10 => container başlat 10 kere belirtilen adrese ping at bu işlemden sonra kapandı
+
+docker container run -d censtos:7 ping 127.0.0.1 -c 10 => container başlat belirtilen adrese ping at bu işlemi yapıyor
+		 ama kapanmıyor container kapanmaya devam ediyor
+	=>bu containerde olan işlemleri görmek için
+		=>docker container logs <container-id>
+	=> bu işlemin çıktılarını canlı olarak izlemek istersemde 
+		=> docker container attach <container-id>
+	
+	## attach <Uid> ve exec -id <Uid> bash arasındaki farkı yazdım yukarıda
+
+
+##########################################################################################################
+----------------------------------------kill - inspect ----------------------------------------------------------
+docker container kill <container-id> 10 saniye içinde containeri kapatır
+	=>stop komutu ile arasındaki fark
+		=>stop tüm processleri sıraylar kapatır
+			=> kill ile shutdown ediyor bir nevi
+
+inspect => containerla alaklı detayları görüyoruz + container host ile ilgili bazı bilgileri
+	=>docker contaner inspect <container-id>
+	içerisindeki çalışan uygulamaya dair envoriment detayları mesela tomcat çalıştıyoruz
+	java sürüm detayları
+	container fiziksel konumu
+	config=> section'da önemli çoğu şey vardır
+	cmd => container start edilirken verilen sh komutları bu section altında
+	networksetting => network bilgileri
+
+##########################################################################################################
+----------------------------------------port mapping----------------------------------------------------------
+
+port ataması yapmak
+docker container run -d -p [host-port]:[container-port] <image-name>
+
+containerdaki açık portları görüntülemek
+	
+docker container port <container-id>
+
+##########################################################################################################
+------------------------------------Docker Compose Giriş-----------------------------------------------------
+birden fazla container tanımlaması yapılabilir 
+tek bir komut ile tüm gereksinimler ayağı kaldırılarak uygulama çalıştırılabilir
+
+version: '3.1' => docker compose'un versiyonuı
+
+
+services: => yaratılacak containerler
+  s_ngnix: 		    ==> service name   
+   container_name: c_ngnix  ==>container name
+   image: nginx
+   ports:                   =>birden çok datalı bir alansa yani lise ile '-' ile başlayıp sırayla değerleri vermeylizi
+	-8080:80	    => port tanımı 1
+	-8081:80	    => port tanımı 2
+
+
+ s_html: 		=> bir tane daha service oluşturduk
+  image: httpd          => image name (bir apache sunucu static dosya yayınyalacağız)
+  volumes:
+	-custom-folder:/usr/local/apache2/htdocs => apachesi sunucusu bu ..../htdocs adresine ulaşmaya çalışırsa benim kuruduğum custom-folder'a ulacak mapledik volume mantığı
+  	
+  ports: 
+	- 9090:80
+	- 9091:80
+
+
+ volumes:
+   html:
+ 
+|_________________________________________|
+		↓↓↓
+		=> docker-compose builder => docker içindeki imageleri build ediyor
+  		=> docker-compose up (docker-compose.yml ile aynı dizindeyiz)
+		
+
+##########################################################################################################
+------------------------------------Docker netwoerk Giriş-----------------------------------------------------
+
+docker containerlerın birer sanal makine gibi çalışıp işlemler gerçekleştirmek için kullanacağı bir 
+sanal networktür
+
+containerlar birbirinden izoledir ama birbirlerine bağlayarabiliriz aynı networkdeymiş gibi
+davranmalarını sağlayabiliriz
+
+
+
+_________________________________________________________________
+ A container  		B container  		C container
+________________      ___________________     __________________   		
+endpoint		endpoint1 endpoint	endpoint
+	|		|		|	    |
+	|		|		|	    |
+	↓		↓		↓	    ↓			
+---------------------------	-----------------------
+	backend network		    Frontnend network
+_________________________________________________________________
+
+
+docker network ls => oluşturulan networkle
+r
+
+
+
+	
+
+
+
+
+
+
