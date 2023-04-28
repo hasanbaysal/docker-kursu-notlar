@@ -1,0 +1,445 @@
+------------------------------------------------------------  DOCKER CLİ GİRİŞ -----------------------------------------------------------------------------------
+
+docker build -t <image-name> . => sonndaki nokta ile docker file'ın path'nin bu konsole'u odakladığın dizin aynı bu dizin olduğun veriyoruz
+docker create --name <container-name> <image-name> => verdiğimi image ile bir container oluşturuyor
+docker ps -a  => tüm containerları listeliyor
+docker images => tüm imageleri listeliyor
+docker start <container-name> => containeri başlatıyor
+docker attach <container-name> or <contaier-guid-id> => başlattığımız container'a bağlanıyoruz => mesela bir console app ise  çıktıyı görebiliyoruz
+docker stop <container-name> or <container-guid-id> => container durdurma
+
+
+------------------------------------------------------------  DOCKER CLİ -----------------------------------------------------------------------------------------
+
+
+
+
+##################################################################################################################################################################
+------------------------------------------------------------  DOCKER RUN -----------------------------------------------------------------------------------------
+
+docker run => docker create + docker start + docker atttach
+  hem bir container oluşturuyor hemde o containeri ayağı kaldırıyor hemde bizi attach yapıyor
+##### docker run -- name <container-name> <image-guid-id or image-name>  ####
+
+-- RM parametresi
+##### docker run --rm --name <container-name> <image-guid-id or image-name>  ####
+bu komutu docker run komutuna eklersem containerı durduğum anda container silinir
+
+-- -D parametresi ile attach olmasını istemiyorsak kullanırız
+
+
+##################################################################################################################################################################
+------------------------------------------------------------  DOCKER RM ------------------------------------------------------------------------------------------
+
+docker rm <container-guid-id> => verilen container'ı siler
+
+
+
+
+##################################################################################################################################################################
+------------------------------------------------------------  DOCKER RMİ -------------------------------------------------------------------------------------------
+
+docker rmi <image-name or image-guid-id> =>  verilen image'i siler => eğer image'a bağlı container yoksa !!!!
+
+
+
+##################################################################################################################################################################
+------------------------------------------------------------  DOCKER İMAGE'e ETİKET ATMAK  -------------------------------------------------------------------------
+
+docker build -t <image-name>:<tag-name> => docker file'dan bir image alırken ona etiket vermek
+örn => docker build -t deneme:v1 . => (sondaki nokta dizin ile alakalı, docker file'ı comand-line'ı açtığım dizinde ara diyorum) 
+mesela "deneme" isimli imageden v1, v2, v3 şeklinde tagler vererek farklı imageler aldım çalıştıtırken
+	=> docker run --name mycontainer deneme:v1
+	=> docker run --name mycontainer deneme:v2
+	=> docker run --name mycontainer deneme:v1
+bu şekilde farklı versiyonlarından containerlar ayağa kaldırabilrim
+
+
+
+##################################################################################################################################################################
+------------------------------------------------  DOCKER İMAGE veya CONTAİNER SİLERKEN --FORCE PARAMETRESİ  ---------------------------------------------------------
+
+##container silmek için => docker rm <container-name> veriyoruz ama container çalışmıyorsa ama yinede silmek istersek --force parametresi ile silebiliriz
+		örnek => docker rm d7a --force (çalışıyordu sildik)
+
+##image silmek için => docker rmi <image-name> veriyoruz 
+diyelim ki container'a bağlı imagelar ve durmuş vaziyette docker rmi <image-name> yapsak bile silemeyiz o zaman force parametresi kullanabiliriz
+     !!!ama image'e bağlı bir container çalışıyorsa force parametresi versek bile silinmez
+		
+		örnek => docker rmi 854 --force
+
+
+
+##################################################################################################################################################################
+----------------------------------------------------------------  DOCKER  PULL ------------------------------------------------------------------------------------
+docker hub'den local'a image'e çekiyoruz 
+ örnek => docker pull  mcr.microsoft.com/dotnet/sdk:7.0
+
+
+
+
+##################################################################################################################################################################
+----------------------------------------------------------------  DOCKER  PUSH ------------------------------------------------------------------------------------
+docker hub'da bulunan repositorylara public ve private olarak imageler gönderilir
+bir tane repository oluşturdum
+bussybox diye deneme amaçlı küçük bir image indirdim
+
+sonra o image'ye bir tag atadım
+docker tag busybox hasanbaysal/tutorialrepository:v1  =>bu hasanbaysal/tutorialrepository kısmı bir repom sondaki :v1 ise tag
+					=> imageleri listelerken 
+	
+			REPOSITORY                       TAG       IMAGE ID       CREATED       SIZE
+			------------------------------------------------------------------------------------
+			deneme                           v1        61303deaf102   5 hours ago   191MB
+			mcr.microsoft.com/dotnet/sdk     7.0       fa397c19e0b5   4 days ago    775MB
+			hasanbaysal/tutorialrepository   v1        7cfbbec8963d   4 weeks ago   4.86MB  *
+			busybox                          latest    7cfbbec8963d   4 weeks ago   4.86MB  *
+
+en altta olan benim indirdiğim bussybox image 
+bir üstündeki ise repository ismine göre oluşturup v1 tagı attıgım busybox image bu şekilde oluşturduğum içinde docker artık nereye göndermesi gerektiğini biliyor
+
+	=> docker push hasanbaysal/tutorialrepository:v1  => oluşturduğum repoya v1 olarak tagladığım bussybox'ı gönderdim
+
+
+
+
+##################################################################################################################################################################
+----------------------------------------------------------------  DOCKER  ASP.NET CORE APP  ----------------------------------------------------------------------
+
+
+
+	FROM mcr.microsoft.com/dotnet/aspnet:7.0
+	WORKDIR /app
+	COPY /bin/Release/net7.0/publish .
+	Entrypoint ["dotnet","DockerAsp.dll"]
+	--------------------------------------------------==> dockerfile dosyası
+
+							↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+						docker build -t aspimage:v1
+				=> diyerek dockerFile dosyasını build ediyoruz
+				=> aspimage:v1 isminde bir image dosyamız oluyor
+
+	=> sıradaki adım imageden container oluşuturup çalşıştırmak
+
+
+	###docker run -p 5000:80 --name aspcontainer aspimage:v1
+	
+	=> -p 5000:80 diyerek bizim pc'mizdeki yani dış dünya olan bizim windows pc'imiz 5000 portunu docker içidne çalışan işletim sisteminin 80 portuna map ediyoruz
+	sonrası docker run komutu açıklaması daha önce yazdık ama tekrar açıklayak
+	=> --name aspcontainer diyerek aspcontainer isminde bir container oluşturuyoruz
+	=> bir boşluk ve aspimage:v1 yazarak bu container'ın hangi imageden ayağı kalkacağını söylüyoruz (az önce kendimiz yarattık bu image'yi)
+
+	--------------- ikinci bir container ayağaı kaldırmak ------
+	### docker run -d -p 5001:80  --name aspcontainer2  aspimage:v1
+		!!! not 5000 portu dolu olduğu için bir önceki containerda burayı map'ledim 
+			bu sefer 5001 portunu map ediyorum
+		!!! -d ile attach olmayı engelledim
+	==> sıralama şöyle de olabilir
+			docker run -d --name mycontainer -p 5000:80 aspimage:v1
+
+	!!! name parametresi vermezsek random name atayabilir
+
+
+##################################################################################################################################################################
+-----------------------------------------------  DOCKER FILE İÇERİSİNDE .NET CORE CLİ KOMUTLARI KULLANMAK  --------------------------------------------------------
+
+	###
+	ilk asp dockerfile kodları (burada sadece asp.net run time image ekledik)
+	-------------------------------------------------------------------------
+			|FROM mcr.microsoft.com/dotnet/aspnet:7.0|
+			|WORKDIR /app			         |
+			|COPY /bin/Release/net7.0/publish .      |        	
+			|Entrypoint ["dotnet","DockerAsp.dll"]   |
+			-----------------------------------------  
+==================================>↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+	##### burada docker file içersinde .net core cli komutlarını göreceğiz #######
+burada uygulamayı publish edip gidip sonra o publish dosyların yolunu verip
+sonra bu dosyalarla birlikte dockerfile gerekli diğer komutları girip
+file'dan imge alıyorum bu zahmetli bir süreç çünkü her değişim için gidip
+visual stdio'a publish yapmak için uğraşıp. publish klasörünü içindeki çıktı dosylarını
+güncellemeyilim. 
+docker file içinde publish yapsak nasıl olur ?
+bunun için dotnet sdk kullanmalıyım ki docker file içinde .net core cli komutlarını çalıştırabileyim. #####_bu_yazının_diğer_kısmı_aşağıda_####
+
+##örnek docker file içersind dotnet core clit komutları kullanmak(sdk içeren image'i kullanacağım)
+	
+-------- örnek docker file ----------------------
+1) FROM mcr.microsoft.com/dotnet/sdk:7.0
+2) WORKDIR /app ===> app klaösür oluşturdum ve oraya konumlandım
+3) COPY . .     ===> ben copy diyerek proje doyalarını alıp /app klasörüne kopyaladıım (docker file proje ana dizininde zaten (ilk). deyince o dizini kast ettim)  
+		      													↓ => ikinci nokta ise o an ki çalışma klasörüm
+															yani /app klasörü
+(3.satırda) ===> proje dizininde ki tüm dosyları aldım /app içine gönderdim özetle
+
+4) RUN dotnet restore  => satırda command line'na bir dotnet cli komutu veriyorum çünkü artık sdk'ım yüklü bu donet komutu bağımlıkları yükle demek libler dll'ler vs
+5) RUN dotnet publish DockerAsp.csproj -c Release -o out
+	=> 5.satırda  dotnet cli komutu olan publish komutunu veriyorum
+	docker file ile aynı dizinde csproj dosyamın adını veriyorum
+	-c Release diyerek release modde publish etmesi gerektiğini söylüyorum
+	-o out diyerek /app klasörü altında (2.satırda workdir ile buraya konumlandım) out klasörüne (oluştur) kopyala diyorum
+	### Dikkat /out deseydim /app aldın bir out klasörü değil app dışında bir out klasörü oluşturur oraya kopyalardır '/' kullanımına dikkat
+6) Workdir out  => çalışma klasörümü buraya alıyorum şu an app altındaki out klasöür içindeyim
+7) ENV ASPNETCORE_URLS="http://*:4500"  => uygulama default olarak localhosttan ayağı kalkıyor(eşittir'den önce ve sonra ASLA BOŞLUK BIRAKMA)
+					=> container içersinde containerdaki makinein localhostunde bu uygulama çalışırsa dış dünyadan kimse erişmez
+					=> ben sdk içindeki ASPNETCORE_URLS => envoriment ile bu uygulama sunucusun ıp'si ne olursa olsun 4500 porttan ayağı
+					=> kalk diyorum
+8) ENTRYPOINT ["dotnet","DockerAsp.dll"] => pubhlish klasöründeki progjeadı.dll olan isimli dosyayı çalıştır demek bu
+					=> aslında bir dotnet cli komutu veriyorum
+					=> dotnet ....dll yada dotnet ...exe verilen şeyi assembly'leri çalıştır demek
+
+
+	##### buradan sonraki ki kısım multi stage build kavramına giriyor.#######
+#####_üst_yazının_diğer_kısmı_burada_####  ama sdk çok büyük boyutlu ben proje dosyalarının olduğu dizine docker file içinde gidip orada publish komutlarını
+çalıştırıp çıktıları docker file içinde yönlendirdiğim yere aldıktan sonra benim sdk ile ilgili
+işim kalmayacak. buna rağmen image içersinde sdk duracak ve boyutu çok büyük olacak
+burada devreye multistage build giriyor. 
+
+birden fazla base image kullanmak istediğimiz zaman multistage kavramı devreye giriyor
+birden  fazla kullanmak çünkü ben hemde runtime ve hemde sdk image kullanacağım ama işi biteni ve uygulamanın çalışması için gerekli olmayan
+sadece belli bir aşamada bize lazım olacan image'i uçuracağım. çünkü her bir satır aslında bizim için bir katmana tekabül ediyor
+biz sdk içeren image'i verdikten sonra işimiz bittiği için onun oluşturacağı katmanı uçurmamız gerek bu noktada multistage build yapacağız
+
+				
+			
+	[gençay hoca tanım]
+*** Multistage Build, Dockerfile dosyalarının okunabilirliğini ve bakımını kolaylaştırmak için geliştirilmiş yapılardır ve birden fazla base image kullanılması
+durumunu nitelemektedir. => buradaki birden fazla base image hemen bir üst yazıda açıkladığım durum yani docker file içersinde 
+dotnet runtime image kullanma ve dotnet sdk kullanımı durumu 
+
+
+=> yine bir not FROM KOMUTU İLE İLGİLİ =>vşr
+	>= Her FROM komutu, farklı bir base (image)=> imajın başlatılmasını
+ sağlar ve Docker imajlarının bir önceki aşamada oluşturulan imajların yanı sıra yalnızca son imajı içermesini sağlar.
+
+=======> ÖZETLE
+-----------------------------
+	ilk olarak sdk içeren image'i docker file'a ekleyip işim bittikten sonra onu ezip sadece runtime içeren image ile yoluma devam edeceğim
+
+
+
+###################### multistage build example 1.0 ################################
+1-)FROM mcr.microsoft.com/dotnet/sdk:7.0 as build
+2-)WORKDIR /app
+3-)COPY . .
+4-)RUN dotnet restore
+5-)Run dotnet publish DockerAsp.csproj -c Release -o out
+6-)FROM mcr.microsoft.com/dotnet/aspnet:7.0
+7-)WORKDIR /app
+8-)COPY --from=build /app/out .  (--from=<name> demeyi unutma ve birleşik yaz)
+9-)ENV ASPNETCORE_URLS="http://*:4500"
+10-)ENTRYPOINT ["dotnet","DockerAsp.dll"]
+
+		
+
+burada yaptığımız işlemler sırayıla şunlardır
+
+1. satır dotnet sdk içeren image'ı ekliyorum çünkü ben dotnet cli komutlarını docker içinde kullanmak istiyorum 
+		nelerdir bunlar mesela => dotnet restore - dotnet build - dotnet puhlish
+ 		veee 'as' kullanarak build isminde bir takma isim kullandım 
+
+2. satırda yeni bir çalışma klasörü oluşturup  /app isminde ona focus oluyorum
+3. satırda copy . . diyerek docker file'nın olduğu dizindeki tüm c# dosylarımı alıyorum /app isimli workdir ile oluşturup focus olduğum klasöre focus oluyorum
+4. satırda dotnet restore diyerek proje bağımlıklarını yüklüyorum (dotnet cli komutu işte)
+5. dotnet publish komutunu kullanıyorum ve projenin csproj dosyasını verip releae modde build alıp çıktısını out isimli bir klasörde oluşturuyorum
+=> burda dikkat bu out klasörü /out demediğim içinde (ki dememem gerekliyor) /app altında oluştu
+6. satırda işte yeni bir image'dan faydalanıp yeni bir katman oluşturuyorum
+7. satırda bu katman içinde yeni bir klasör oluşturup ona focus oluyorum
+8. satırda ise ilk image'deki yani dotnet sdk kullanan image'deki puhlish dosylarımı oluşturduğum klasör olan
+	/app altındaki out klasörü içinde pushlih için hazırlanmış olan dosyalarımın hepsini  çekiyorum
+9 ve 10 satır zaten bildiğimiz satırlar
+
+
+###################### multistage build example 2.0 ################################ !!!!! => daha da optimize edilmiş hali
+
+
+1-)FROM mcr.microsoft.com/dotnet/sdk:7.0 as build
+2-)WORKDIR /app
+3-)COPY *.csproj .
+4-)RUN dotnet restore
+5-)COPY . .
+6-)Run dotnet publish DockerAsp.csproj -c Release -o out
+7-)FROM mcr.microsoft.com/dotnet/aspnet:7.0
+8-)WORKDIR /app
+9-)COPY --from=build /app/out . (--from=<name> demeyi unutma ve birleşik yaz)
+10-)ENV ASPNETCORE_URLS="http://*:4500"
+11-)ENTRYPOINT ["dotnet","DockerAsp.dll"]
+
+[tam anlamadım]
+yukarıdaki örnekten farklı olarak  //ekstra olarak bir satır eklendi yani bir layer daha eklendi
+
+3. satırda tüm her şeyi kopyalamak yerine sadece projemi kopyalıyorum
+ve restore yapıyorum 
+	diyelim ki uygulamaya bir kütüphane ekledim(cs proje içinde bağlı kütüphane ve framework bilgileri yer alır) 
+	yada çıkardım bunun için tüm dosyaları yeniden kopyalamasına gerek yok sistemin
+		=> burada bir copy mantığına girelim
+		=>copy ilk copy attığı anda tüm dosyları cache alır eğer bir değişim varsa cache aldığı dosyalar içinde hepsini tekrar copyalar
+		=> eğer değişim yoksa copy atmak için tekrar uğraşmaz cache'den dosyları çeker
+## biz bu noktada biraz optmize etmiş oluyoruz sistemi.  .csproje dosyasında kütüphane değişimleri çok sık olabilir
+ diye .csproju copyalıyoruz sonrasında dotnet restore deyip yeni değişimleri çekiyoruz
+ daha sonrasında genele proje klasörünü copyalıyoruz ki burada da bir değişim yoksa bu sefer cache'den alır
+	burada bu copy işlemini yaparak bir nebze olsada build süreçinde optimizasyon yapıyoruz
+
+
+##################################################################################################################################################################
+-----------------------------------------------------------------------  DOCKER IGNORE DOSYASI--------------------------------------------------------
+
+ ### Dockerfile dosyası içerisinde copy atarken kopyalanmasını istemediğimi dosylar olabilir
+	mesela obj klasörü bunlar tamamen debug süreçleri ile alakalı şeyler c# tarafında 
+	bunların docker image içersine gönderilmesi gereksiz
+	biz zatenönceki örneklerde puhlish olayını docker image içerisinde yapıyoruz
+	o yüzden relase ve debug klasörleride bizim için gereksiz birer yük oluyor
+	
+#.dockerignore isimli uzantısız klasörü dockerfile ile aynı konumda oluşturuyoruz
+# => **/bin/ => ** tane yıldız proje dosylarımı tara ve bin isimli bir klasör görürsen kopyalama demek
+	
+####
+**/bin/
+**/obj/
+**/Dockerfile*   => dockerfile dosyasını da kopyalama sondaki yıldız ise dockerfile'nın sonu ne ile biterse bitrsin dockerfile1 dockerfile2 gibi mesela
+**/.dockerignore* => .dockerignore dosyasını da kopyalama
+##################################################################################################################################################################
+-----------------------------------------------------------------------  DOCKER VERİ KALICILIĞI TEORİ --------------------------------------------------------
+ ##docker içersinde hayatta olan uygulamaya ait üretilen yahut dışarıdan verilerin uçucu bir ömre sahip olduğunu biliyoruz
+ =>bu veriler ile kasıt run time'de memory'de üretilen verile değil fiziksel dosyalardır
+ => mesela bir asp.net core uygulamasına upload edilen bir image, uygulama içerisinde üretilen bir txt dosyası
+ => dockerin tüm katmalarının üstünde container ayağı kalktığı anda geçici bir read/write işlemleri için bir katman oluşuturduğunu biliyoruz
+ => bu veriler işte bu katmanda tutuluyor. container kapanın bu katmanda siliniyor dolayısıyla verilerimiz uçuyor bu karşı yapabileceğimiz bazı şeyler var bunlar :
+
+
+## Bind Mount
+ 		Container tarafından üretilen dataların ana makinadaki işletim sistemi üzerinde 
+		oluşturulan bir alanda depolanmasıdır. Bir image’den oluşturulan tüm containerlar aynı alanda depolama yapacağı 
+		için bir containerın kaydettiği dataya diğer containerlarda erişebilecek ve müdahalede bulunabilecektir. 
+		Böylece her bir containerın bağımsız bir data üretmesi engellenmiş ve datanın koyulduğu yer merkezileştirilmiş olacaktır.
+## Volume
+
+		Container tarafından üretilen dataların işletim sistemi üzerinde değil Docker’ın kendi içerisindeki bir alanda kalıcı olarak tutulmasıdır.
+	 	Volumler Docker içerisinde olmasından dolayı CLI ile yönetilirler. Docker seviyesinde olduklarından dolayı backup alınmaları, 
+		restore edilmeleri ve hatta migrate edilmeleri oldukça kolaydır. Bind Mount’a nazaran cloud’da tutulabilirler ve böylece Docker’ın
+		 bulunduğu sunucunun çökebilmesi yahut fiziksel bir zarar görebilmesi ihtimaline karşı önlem alabilirler.
+ 		Ayrıca hem Windows hem de Linux işletim sistemlerinde çalışabilmektedirler.
+
+## Tmpfs Mount
+		Container tarafında üretilen dataların memory’e geçici olarak kaydedilmesidir. Genellikle ana makinada 
+		yahut containerda geçici olarak saklanacak veriler için tercih edilmektedir.
+
+##################################################################################################################################################################
+-----------------------------------------------------------------------  BİND MOUNt--------------------------------------------------------------------
+
+## özetle container dışında yani docker dışında ana makinein dosya sistemini container'a bağlıyoruz  uygulama içerisne yüklenen dosylar bu noktaya yüklenece
+container kapansa bile dosylar gitmeyecekler
+
+ ===> docker run -d -p 5002:4500 --name bindmound1 --mount type=bind,source="C:\Users\hasan\Desktop\images",target="/app/wwwroot/images" 46489
+	=>  bu komut ile bind mount yapıyoruz işletim sisteminde bir dosyayı docker içerisinde dosya kaydetme işlemi yapacağımız klasöre bağlıyoruz
+		=> --mount type=bind
+ (virgül unutma)=>,target="işletim sistemindeki dosyaynın yolu"
+ (virgül unutma)=>,soruce="docker container içerisindeki dosyanın yolu" => biz dosyayı docker'da publish ederken /app klasörüdne çalışıyor oluşan çıktıda
+		=> /app aldında /wwwroot altında /images içinde dosyaları saklıyoruz o yüzden burayı target olarak kullanacağız
+
+
+
+
+benim uygulamamda default olarak yüklü resimler var image alırken wwwroot/images altında 2 tane resim vardı bunlar image'e dahil hep olacaklar
+!!! => default davranış bu şekilde
+	=> biz bind mount yaparken işletim sistemindeki dosyayı bağladığımız için o dosyada ne varsa orayı görecek
+	=> o yüzden uygulamayı ayağı kaldırdığımda resim o image alırken ki iki resimi göremeceğim
+	=> çünkü ana makinedeki images klasörüm boş
+vee başka bir container'ı aynı image'den oluşturup ana makinedeki aynı images klasörüne bind mount yapsam o da aynı resimleri görecek orada ne var çeker
+silerse diğeride etkilenir
+eklerse diğeride etkilenir
+
+
+
+		
+##################################################################################################################################################################
+-----------------------------------------------------------------------  VOLUME --------------------------------------------------------------------
+
+
+
+[gençay yıldız not]
+	====>↓↓↓
+		Peki verileri kalıcı hale getirirken Docker Volume’ün Bind Mount‘tan ne farkı var?
+		Bind Mount’da container tarafında üretilen veriler ana makine üzerindeki işletim sisteminde ayrılan bir alanda tutulmaktadır.
+		Docker Volume’de ise veriler Docker seviyesinde tutulmaktadır. Dolayısıyla Docker CLI ile yönetilebilmekte ve backup, restore, 
+		migrate vs. gibi işlemler daha dinamik gerçekleştirilebilmektedir. Hem Windows hem de Linux ortamlarda çalışabilmektedirler. 
+		Tüm bunların yanında cloud ortamda depolanabilmekte ve böylece ortam ile birlikte sunuculara olan bağımlılığı koparabilmektedirler.
+
+
+## volume oluşturma ve container içersindeki dataları volume bağlamak
+
+ => docker volume create <volume-name>
+	=> docker volume create images
+=> docker volume'e container bağlamak
+
+	docker run -d -p 5003:4500 --name volumeexample1 -v images:/app/wwwroot/images 4648
+
+	=> docker run -d -p 5003:4500 --name volumeexample1 => burada kadar bildiğimiz şeyler
+	=> ### volume oluşturmak içinde  -v [volume-name]:[target-file-in-container]
+	=> sonra olarakta 4648 ile hangi image'den oluşturacaksak container'ı onun id'sini veriyoruz bildiğimiz şey
+
+
+!!! bind mount yaparken başlangıç resimleri göremedik çünkü ana makinedeki klasörü boştu
+ => volume yaparken volume ilk önce kendisine target olarak verilen path'e gider oradaki dosyaları kendine kopyalar
+	=> bu sayede image ile birlikte uygulamaya koyduğum dosyları direkt görebilirim
+!!!! => aynı volume farklı container'lar bağlarsam onlarda aynı dataları görür 
+
+==> volume silmek
+	=> docker volume rm <volume-name>
+	=> docker volume rm images
+
+
+##################################################################################################################################################################
+-----------------------------------------------------------------------  DOCKER ENVİRONMENT --------------------------------------------------------------------
+
+	Asp.NET Core çalışma ortamını belirleyebilmek için ‘ASPNETCORE_ENVIRONMENT’ isimli değişkeni kullanmaktadır. 
+	Bu değişkenin değeri ihtiyaca göre herhangi bir değer olabilir lakin genellikle geliştirme, sahneleme yahut prodüksiyon 
+	anlamlarına karşılık gelen ‘Development’, ‘Staging’ ve ‘Production’ durumları tercih edilmektedir.
+
+
+	=> custom envoriment yazabilirim bunların değerlerine ıconfiguration üzerinden erişlebiliriz key-value şekildeler zaten
+	
+
+==> 
+	## container env gönderimi
+	docker run -d -p <port_out>:<port_in> –env <environment_parameter>=<environment> –name <controller_name> <image_name>
+	## example
+	docker run -d -p 1071:1453 --env ASPNETCORE_ENVIRONMENT=Production --name cont1 appimage:v1
+
+asp.net core core içerisindeki envoriment değerleri
+	Iconfig üzerinden okunuru ve sırayıla aranan değer
+	ilk önce envorimentta kontrol edilir
+	sonra secre.json
+	sonra appsettigns.json ====> appsettings.json => tüm ortamlar'da okunur 
+					appsetting.Development.json=> development ortamda okunur.
+					appsetting.Production.json=> productın ortamda okunur.
+									
+
+##################################################################################################################################################################
+-----------------------------------------------------------------------  <none> image nedir	 --------------------------------------------------------------------
+
+
+
+
+kalan kısımlar
+
+docker n katmanlı uygulama
+docker içersinde bir sql server kurup container olarak kaldırıp başka bir containerden onla haberleşmek 
+docker compose
+docker swarm
+tech budyy docker içerik
+	=> https://www.youtube.com/watch?v=uk1EIye81uY&list=PLRp4oRsit1bzGGClDYCplnGKYI6p-dDE1
+git hud docker notlar
+	=> https://github.com/mebaysan/DockerElKitabi#image-ve-registry
+https://gokhansengun.com  notlar
+	Docker Bölüm 1: Nedir, Nasıl Çalışır, Nerede Kullanılır?
+	Docker Bölüm 2: Yeni bir Docker Image'ı Nasıl Hazırlanır?
+	Docker Bölüm 3: Docker Compose Hangi Amaçlarla ve Nasıl Kullanılır?
+	Docker İpuçları - Soru / Cevap - Bölüm 1
+	Docker İpuçları - Soru / Cevap - Bölüm 2
+	Docker İpuçları - Soru / Cevap - Bölüm 3
+ 	Docker İpuçları - Soru / Cevap - Bölüm 4
+
+
+ilintili konular
+https://academy.patika.dev/courses/deployment/what_is_heroku
+kablosuz kedi docker
